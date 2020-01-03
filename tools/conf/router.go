@@ -119,6 +119,7 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 
 	rule := new(router.RoutingRule)
 	rule.Tag = rawFieldRule.OutboundTag
+	rule.Type = router.RoutingRule_Field
 
 	if rawFieldRule.Domain != nil {
 		for _, domain := range *rawFieldRule.Domain {
@@ -208,6 +209,13 @@ func ParseRule(msg json.RawMessage) (*router.RoutingRule, error) {
 		}
 		return chinasitesrule, nil
 	}
+	if rawRule.Type == "gfwlist" {
+		gfwlists, err := parseGfwListRule(msg)
+		if err != nil {
+			return nil, newError("invalid chinasites rule").Base(err)
+		}
+		return gfwlists, nil
+	}
 	return nil, newError("unknown router rule type: ", rawRule.Type)
 }
 
@@ -224,6 +232,7 @@ func parseChinaIPRule(data []byte) (*router.RoutingRule, error) {
 	return &router.RoutingRule{
 		Tag:  rawRule.OutboundTag,
 		Cidr: chinaIPs.Ips,
+		Type: router.RoutingRule_ChinaIp,
 	}, nil
 }
 
@@ -237,5 +246,19 @@ func parseChinaSitesRule(data []byte) (*router.RoutingRule, error) {
 	return &router.RoutingRule{
 		Tag:    rawRule.OutboundTag,
 		Domain: chinaSitesDomains,
+		Type:   router.RoutingRule_ChinaSites,
+	}, nil
+}
+
+func parseGfwListRule(data []byte) (*router.RoutingRule, error) {
+	rawRule := new(RouterRule)
+	err := json.Unmarshal(data, rawRule)
+	if err != nil {
+		log.Trace(newError("invalid router rule: ", err).AtError())
+		return nil, err
+	}
+	return &router.RoutingRule{
+		Tag:  rawRule.OutboundTag,
+		Type: router.RoutingRule_GfwList,
 	}, nil
 }

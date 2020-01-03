@@ -56,6 +56,25 @@ func TestChinaSitesJson(t *testing.T) {
 	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("v2ray.com"), 80))), IsFalse)
 }
 
+func TestGfwJson(t *testing.T) {
+	assert := With(t)
+
+	rule, err := ParseRule([]byte(`{
+    "type": "gfwlist",
+    "outboundTag": "y"
+  }`))
+	assert(err, IsNil)
+	assert(rule.Tag, Equals, "y")
+	cond, err := rule.BuildCondition()
+	assert(err, IsNil)
+	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("v.qq.com"), 80))), IsFalse)
+	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("www.163.com"), 80))), IsFalse)
+	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("ngacn.cc"), 80))), IsFalse)
+	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("12306.cn"), 80))), IsFalse)
+
+	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("v2ray.com"), 80))), IsTrue)
+}
+
 func TestDomainRule(t *testing.T) {
 	assert := With(t)
 
