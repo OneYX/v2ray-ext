@@ -37,6 +37,25 @@ func TestChinaIPJson(t *testing.T) {
 	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("8.8.8.8"), 80))), IsFalse)
 }
 
+func TestGfwIPJson(t *testing.T) {
+	assert := With(t)
+
+	rule, err := ParseRule([]byte(`{
+    "type": "gfwip",
+    "outboundTag": "x"
+	}`))
+	assert(err, IsNil)
+	assert(rule.Tag, Equals, "x")
+	cond, err := rule.BuildCondition()
+	assert(err, IsNil)
+	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("121.14.1.189"), 80))), IsFalse)    // sina.com.cn
+	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("101.226.103.106"), 80))), IsFalse) // qq.com
+	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("115.239.210.36"), 80))), IsFalse)  // image.baidu.com
+	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("120.135.126.1"), 80))), IsFalse)
+
+	assert(cond.Apply(proxy.ContextWithTarget(context.Background(), net.TCPDestination(net.ParseAddress("91.108.12.6"), 80))), IsTrue)
+}
+
 func TestChinaSitesJson(t *testing.T) {
 	assert := With(t)
 

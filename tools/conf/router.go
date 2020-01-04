@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"v2ray.com/core/tools/gfwip"
 
 	"v2ray.com/core/app/log"
 	"v2ray.com/core/app/router"
@@ -202,6 +203,13 @@ func ParseRule(msg json.RawMessage) (*router.RoutingRule, error) {
 		}
 		return chinaiprule, nil
 	}
+	if rawRule.Type == "gfwip" {
+		chinaiprule, err := parseGfwIPRule(msg)
+		if err != nil {
+			return nil, newError("invalid chinaip rule").Base(err)
+		}
+		return chinaiprule, nil
+	}
 	if rawRule.Type == "chinasites" {
 		chinasitesrule, err := parseChinaSitesRule(msg)
 		if err != nil {
@@ -233,6 +241,23 @@ func parseChinaIPRule(data []byte) (*router.RoutingRule, error) {
 		Tag:  rawRule.OutboundTag,
 		Cidr: chinaIPs.Ips,
 		Type: router.RoutingRule_ChinaIp,
+	}, nil
+}
+
+func parseGfwIPRule(data []byte) (*router.RoutingRule, error) {
+	rawRule := new(RouterRule)
+	err := json.Unmarshal(data, rawRule)
+	if err != nil {
+		return nil, newError("invalid router rule").Base(err)
+	}
+	var gfwIPs geoip.CountryIPRange
+	if err := proto.Unmarshal(gfwip.GfwIPs, &gfwIPs); err != nil {
+		return nil, newError("invalid china ips").Base(err)
+	}
+	return &router.RoutingRule{
+		Tag:  rawRule.OutboundTag,
+		Cidr: gfwIPs.Ips,
+		Type: router.RoutingRule_GfwIp,
 	}, nil
 }
 
