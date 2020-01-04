@@ -204,11 +204,11 @@ func ParseRule(msg json.RawMessage) (*router.RoutingRule, error) {
 		return chinaiprule, nil
 	}
 	if rawRule.Type == "gfwip" {
-		chinaiprule, err := parseGfwIPRule(msg)
+		gfwiprule, err := parseGfwIPRule(msg)
 		if err != nil {
 			return nil, newError("invalid chinaip rule").Base(err)
 		}
-		return chinaiprule, nil
+		return gfwiprule, nil
 	}
 	if rawRule.Type == "chinasites" {
 		chinasitesrule, err := parseChinaSitesRule(msg)
