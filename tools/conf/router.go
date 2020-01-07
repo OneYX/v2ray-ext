@@ -250,7 +250,7 @@ func parseGfwIPRule(data []byte) (*router.RoutingRule, error) {
 	if err != nil {
 		return nil, newError("invalid router rule").Base(err)
 	}
-	var gfwIPs geoip.CountryIPRange
+	var gfwIPs gfwip.GfwIPRange
 	if err := proto.Unmarshal(gfwip.GfwIPs, &gfwIPs); err != nil {
 		return nil, newError("invalid china ips").Base(err)
 	}
